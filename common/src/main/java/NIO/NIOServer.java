@@ -41,7 +41,7 @@ public class NIOServer implements Runnable {
                     if (key.isReadable()) {
                         // TODO: 7/23/2020 fileStorage handle
                         System.out.println("read key");
-                        ByteBuffer buffer = ByteBuffer.allocate(80);
+                        ByteBuffer buffer = ByteBuffer.allocate(1024);
                         int count = ((SocketChannel)key.channel()).read(buffer);
                         if (count == -1) {
                             key.channel().close();

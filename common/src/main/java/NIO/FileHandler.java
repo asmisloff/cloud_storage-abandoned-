@@ -1,4 +1,4 @@
-package IOSolution;
+package NIO;
 
 import java.io.*;
 import java.net.Socket;
@@ -6,9 +6,9 @@ import java.net.Socket;
 public class FileHandler implements Runnable {
 
     private String serverFilePath = "./common/src/main/resources/serverFiles";
-    private Socket socket;
-    private DataInputStream is;
-    private DataOutputStream os;
+    private final Socket socket;
+    private final DataInputStream is;
+    private final DataOutputStream os;
     private boolean isRunning = true;
     private static int cnt = 1;
 
