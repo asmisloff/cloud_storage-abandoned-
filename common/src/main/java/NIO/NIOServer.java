@@ -3,15 +3,17 @@ package NIO;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
+import java.util.HashMap;
 import java.util.Iterator;
 
 public class NIOServer implements Runnable {
+
+    public static final String ROOT = "./common/src/resources/serverFiles";
+
     private ServerSocketChannel server;
     private Selector selector;
+    HashMap<SocketChannel, ChannelHandler> channelHandlers;
 
     public NIOServer() throws IOException {
         server = ServerSocketChannel.open();
@@ -19,6 +21,7 @@ public class NIOServer implements Runnable {
         server.configureBlocking(false);
         selector = Selector.open();
         server.register(selector, SelectionKey.OP_ACCEPT);
+        channelHandlers = new HashMap<>();
     }
 
     @Override
@@ -36,28 +39,16 @@ public class NIOServer implements Runnable {
                         SocketChannel channel = ((ServerSocketChannel) key.channel()).accept();
                         channel.configureBlocking(false);
                         channel.register(selector, SelectionKey.OP_READ);
-                        channel.write(ByteBuffer.wrap("Hello!".getBytes()));
+                        channelHandlers.put(channel, new ChannelHandler(channel));
                     }
                     if (key.isReadable()) {
-                        // TODO: 7/23/2020 fileStorage handle
-                        System.out.println("read key");
-                        ByteBuffer buffer = ByteBuffer.allocate(1024);
-                        int count = ((SocketChannel)key.channel()).read(buffer);
-                        if (count == -1) {
-                            key.channel().close();
-                            break;
+                        System.out.println("Read key: " + key.toString());
+                        ChannelHandler ch = channelHandlers.get(key.channel());
+                        ch.readRequest();
+                        if (ch.tryParseRequest()) {
+                            System.out.printf("Request parsed: %s -- %s\n", ch.getRequestTag(), ch.getRequestParameter());
+                            ch.executeRequest();
                         }
-                        buffer.flip();
-                        StringBuilder s = new StringBuilder();
-                        while (buffer.hasRemaining()) {
-                            s.append((char)buffer.get());
-                        }
-                        for (SelectionKey key1 : selector.keys()) {
-                            if (key1.channel() instanceof SocketChannel && key1.isReadable()) {
-                                ((SocketChannel) key1.channel()).write(ByteBuffer.wrap(s.toString().getBytes()));
-                            }
-                        }
-                        System.out.println();
                     }
                 }
             }
